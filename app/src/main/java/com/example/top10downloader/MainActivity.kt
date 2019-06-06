@@ -31,13 +31,11 @@ class FeedEntry {
 }
 
 private const val STATE_FEEDURL = "feedurl"
-private const val STATE_FEEDLIMIT ="feedlimit"
+private const val STATE_FEEDLIMIT = "feedlimit"
 
 class MainActivity : AppCompatActivity() {
     private val TAG = "MainActivity"
-
-    //private var feedUrl:String by lazy(LazyThreadSafetyMode.NONE) {"http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplications/limit=%d/xml"}
-
+    
     private var feedUrl: String =
         "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplications/limit=%d/xml";
     private var feedLimit = 10
@@ -49,7 +47,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        if(savedInstanceState != null) {
+        if (savedInstanceState != null) {
             feedUrl = savedInstanceState.getString(STATE_FEEDURL)
             feedLimit = savedInstanceState.getInt(STATE_FEEDLIMIT)
         }
@@ -58,7 +56,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun downloadUrl(feedUrl: String) {
-        if(feedUrl != feedCached) {
+        if (feedUrl != feedCached) {
             downloadData = DownloadData(this, xmlListView)
             downloadData?.execute(feedUrl)
             feedCached = feedUrl
@@ -140,7 +138,6 @@ class MainActivity : AppCompatActivity() {
                 super.onPostExecute(result)
                 val parseApplications = ParseApplications()
                 parseApplications.parse(result)
-
 
 
                 val entryAdapter = EntryAdapter(propContext, R.layout.list_record, parseApplications.applications)
