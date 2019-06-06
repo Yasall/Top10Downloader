@@ -31,27 +31,39 @@ class FeedEntry {
 }
 
 private const val STATE_FEEDURL = "feedurl"
+private const val STATE_FEEDLIMIT ="feedlimit"
 
 class MainActivity : AppCompatActivity() {
     private val TAG = "MainActivity"
 
     //private var feedUrl:String by lazy(LazyThreadSafetyMode.NONE) {"http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplications/limit=%d/xml"}
+
     private var feedUrl: String =
         "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplications/limit=%d/xml";
     private var feedLimit = 10
+
+    private var feedCached = "Invalidated"
 
     private var downloadData: DownloadData? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        if(savedInstanceState != null) {
+            feedUrl = savedInstanceState.getString(STATE_FEEDURL)
+            feedLimit = savedInstanceState.getInt(STATE_FEEDLIMIT)
+        }
         downloadUrl(feedUrl.format(feedLimit))
 
     }
 
     private fun downloadUrl(feedUrl: String) {
-        downloadData = DownloadData(this, xmlListView)
-        downloadData?.execute(feedUrl)
+        if(feedUrl != feedCached) {
+            downloadData = DownloadData(this, xmlListView)
+            downloadData?.execute(feedUrl)
+            feedCached = feedUrl
+        }
+
     }
 
 
@@ -79,7 +91,11 @@ class MainActivity : AppCompatActivity() {
                 feedUrl =
                     "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/toppaidapplications/limit=%d/xml"
             R.id.mnuSongs ->
-                feedUrl = "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topsongs/limit=%d/xml"
+                feedUrl =
+                    "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topsongs/limit=%d/xml"
+            R.id.mnuRefresh -> {
+                feedCached = "Invalidated"
+            }
             R.id.mnu10, R.id.mnu25 -> {
                 if (!item.isChecked) {
                     item.isChecked = true
@@ -103,21 +119,15 @@ class MainActivity : AppCompatActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putString(STATE_FEEDURL, feedUrl)
+        outState.putInt(STATE_FEEDLIMIT, feedLimit)
     }
 
-
-    //feedUrl is coming to static set default already, its overwriting the restored state
-    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
-        Log.d(TAG, "Items restored")
-        feedUrl = savedInstanceState.getString(STATE_FEEDURL)
-        super.onRestoreInstanceState(savedInstanceState)
-    }
 
     companion object {
         private class DownloadData(context: Context, listView: ListView) : AsyncTask<String, Void, String>() {
             private val TAG = "DownloadData"
 
-            //prop not best to use
+            //prop not best to use for naming convention
             var propContext: Context by Delegates.notNull()
             var propListView: ListView  by Delegates.notNull()
 
@@ -132,8 +142,6 @@ class MainActivity : AppCompatActivity() {
                 parseApplications.parse(result)
 
 
-//                val arrayAdapter = ArrayAdapter<FeedEntry>(propContext, R.layout.list_item, parseApplications.applications)
-//                propListView.adapter = arrayAdapter
 
                 val entryAdapter = EntryAdapter(propContext, R.layout.list_record, parseApplications.applications)
                 propListView.adapter = entryAdapter
